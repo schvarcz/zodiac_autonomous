@@ -38,7 +38,7 @@ struct NMEA_WPL
     this->longitude = nmeaToDeg(std::stod(part));
     std::getline(parts,part,',');
     this->longitudeH = part;
-    if(this->longitudeH.compare("S") == 0)
+    if(this->longitudeH.compare("W") == 0)
       this->longitude = -this->longitude;
 
     this->name = part;
@@ -107,7 +107,7 @@ public:
 
   void nmeaSentenceCallback(const nmea_msgs::Sentence sentence_msg)
   {
-    cout << sentence_msg.sentence << endl;
+    cout << "NMEA recived : " << sentence_msg.sentence << endl;
 
     std::stringstream parts(sentence_msg.sentence);
     string part;
@@ -202,4 +202,6 @@ int main(int argc, char** argv)
 //    mZodiacAutonomous.publishBoatPose();
 //    ros::spinOnce();
 //  }
+
+    return 0;
 }
