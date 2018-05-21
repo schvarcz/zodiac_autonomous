@@ -107,31 +107,40 @@ public:
 
   void nmeaSentenceCallback(const nmea_msgs::Sentence sentence_msg)
   {
-    cout << "NMEA recived : " << sentence_msg.sentence << endl;
-
-    std::stringstream parts(sentence_msg.sentence);
-    string part;
-
-    std::getline(parts,part,',');
-
-    if(part.compare("$ECWPL") == 0)
+    // Test if it was sending twice
+    if (sentence_msg.sentence != previousSentence)
     {
-      if(loaded)
+      cout << "NMEA recived : " << sentence_msg.sentence << endl;
+
+      std::stringstream parts(sentence_msg.sentence);
+      string part;
+
+      std::getline(parts,part,',');
+
+      if(part.compare("$ECWPL") == 0)
       {
-        loaded = false;
-        pts.clear();
+        if(loaded)
+        {
+          loaded = false;
+          pts.clear();
+        }
+        NMEA_WPL wp(sentence_msg.sentence);
+        pts.push_back(wp);
       }
-      NMEA_WPL wp(sentence_msg.sentence);
-      pts.push_back(wp);
+      else if(part.compare("$ECRTE") == 0)
+      {
+        if(!loaded)
+          publishWaypointList();
+        loaded = true;
+        NMEA_RTE rtem(sentence_msg.sentence);
+        rte.push_back(rtem);
+      }
     }
-    else if(part.compare("$ECRTE") == 0)
-    {
-      if(!loaded)
-        publishWaypointList();
-      loaded = true;
-      NMEA_RTE rtem(sentence_msg.sentence);
-      rte.push_back(rtem);
+    else if(sentence_msg.sentence != ""){
+      ROS_WARN("NMEA waypoint message recived twice");
     }
+
+    previousSentence = sentence_msg.sentence;
   }
 
   void publishWaypointList()
@@ -148,6 +157,7 @@ public:
       wp.waypointID = i++;
       wp.latitude  = pt.latitude;
       wp.longitude = pt.longitude;
+      wp.waypointReached = 0;
       waypoint_msg.waypoints.push_back(wp);
     }
     pub2.publish(waypoint_msg);
@@ -186,6 +196,7 @@ private:
   vector<NMEA_WPL> pts;
   vector<NMEA_RTE> rte;
   bool loaded;
+  string previousSentence; // in order to check if the NMEA sentence was recived twice.
 };
 
 int main(int argc, char** argv)
