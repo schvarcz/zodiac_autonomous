@@ -164,13 +164,24 @@ public:
   }
 
   //Just keeping these fucntions around in case of nmea messages directly from GPS do not work.
+  // ToDo
   void publishBoatPose()
   {
     nmea_msgs::Sentence msg;
     msg.header.stamp = ros::Time::now();
-    msg.sentence = packMessage("GPGGA,123519,4807.038,N,01131.000,E,1,10,0.9,545.4,M,46.9,M,,");
+
+    std::stringstream ss;
+    ss << "GPGGA,"; //<< time << "," << "{0:08.3f}".format(degToNmea(lat)) << "," << latH(lat) << "," << "{0:09.3f}".format(degToNmea(lon)) << "," << lonH(lon) << "," << "4,10,0," << str(self.cur_pose.pose.position.z) << ",M," << str(self.cur_pose.pose.position.z) << ",M,,";
+    msg.sentence = packMessage(ss.str());
+    //msg.sentence = packMessage("GPGGA,123519,4807.038,N,01131.000,W,1,10,0.9,545.4,M,46.9,M,,");
+
     pub1.publish(msg);
   }
+
+
+  // Publish Boat true heading
+       // msg_comp = "GPHDT," + str(yaw) + ",T"
+
 
   string packMessage(string message)
   {
@@ -205,14 +216,12 @@ int main(int argc, char** argv)
 
   ZodiacAutonomous mZodiacAutonomous;
 
-  ros::spin();
-
-//  ros::Rate rate(1);
-//  while(rate.sleep())
-//  {
-//    mZodiacAutonomous.publishBoatPose();
-//    ros::spinOnce();
-//  }
+  ros::Rate rate(1);
+  while(rate.sleep())
+  {
+    //mZodiacAutonomous.publishBoatPose();
+    ros::spinOnce();
+  }
 
     return 0;
 }
